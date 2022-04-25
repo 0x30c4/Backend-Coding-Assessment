@@ -14,11 +14,11 @@ export PROD_HOST_DOMAIN="biniyogfintech.0x30c4.dev"
 
 export STATIC_URL="static/"
 
-export DEBUG=0
+export DEBUG=1
 
 if [[ $# > 0 ]]
 then
-	./manage.py migrate
-else
 	./manage.py runserver
+else
+	bash
 fi
