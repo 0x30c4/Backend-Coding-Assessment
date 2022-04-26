@@ -26,14 +26,19 @@ sys_path.insert(0, os_path.join(BASE_DIR, 'apps'))
 SECRET_KEY = '0x-zrhf@)(t)%-630q&s&9g_c^lvh_9cehy@7vx==@bxgn_s_='
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = bool(int(environ["DEBUG"]))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    environ["PROD_HOST_DOMAIN"]
+]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'apps.accounts.apps.AccountsConfig',
+    'apps.gallery.apps.GalleryConfig',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,8 +46,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'apps.accounts.apps.AccountsConfig',
-    'apps.gallery.apps.GalleryConfig',
+    'rest_framework',
+    'rest_framework_swagger',
+
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -60,7 +67,7 @@ ROOT_URLCONF = 'fintech.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os_path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -76,15 +83,47 @@ TEMPLATES = [
 WSGI_APPLICATION = 'fintech.wsgi.application'
 
 
+# REST permissions.
+# By default you need to be authenticated in order access any
+# endpoint.
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
+}
+
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+if not DEBUG:
+    POSTGRES_HOST = environ.get("POSTGRES_HOST", default="")
+    POSTGRES_DB = environ.get("POSTGRES_DB", default="")
+    POSTGRES_USER = environ.get("POSTGRES_USER", default="")
+    POSTGRES_PASSWORD = environ.get("POSTGRES_PASSWORD", default="")
+    POSTGRES_PORT = environ.get("POSTGRES_PORT", default="")
+    print(1)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': POSTGRES_DB,
+            'USER': POSTGRES_USER,
+            'PASSWORD': POSTGRES_PASSWORD,
+            'HOST': POSTGRES_HOST,
+            'PORT': POSTGRES_PORT,
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
+    }
 
 
 # Password validation
@@ -128,7 +167,14 @@ STATIC_URL = '/static/'
 
 # New configs
 AUTH_USER_MODEL = 'accounts.CustomUser'
-LOGIN_REDIRECT_URL = '/gellary'
 
+LOGIN_PAGE = '/auth/login/'
+LOGIN_REDIRECT_URL = '/api/gallery/'
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': True,
+    # 'LOGIN_URL': LOGIN_PAGE,
+    'LOGOUT_URL': '/auth/logout'
+}
 
 AUTHENTICATION_BACKENDS = ['accounts.backends.EmailBackend']

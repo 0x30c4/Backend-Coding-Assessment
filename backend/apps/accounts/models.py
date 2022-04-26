@@ -4,4 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class CustomUser(AbstractUser):
+    """
+    Custom User model that can handle email.
+    """
     email = models.EmailField(_('email address'), unique=True)

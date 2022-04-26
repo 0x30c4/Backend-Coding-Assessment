@@ -1,3 +1,8 @@
 from django.contrib import admin
+# from apps.gallery import models
 
-# Register your models here.
+class AuthorAdmin(admin.ModelAdmin):
+    pass
+
+# admin.site.register(models.Items, AuthorAdmin)
+
